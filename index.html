@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>画鋲（gabyo / pin-wall）— osakenpiro</title>
+<title>画鋲（gabyo / pin-wall v0.2）— osakenpiro</title>
 <style>
 :root{
   --cream:#faf9f6;
@@ -14,7 +14,6 @@
   --teal:#1d9e75;
   --indigo:#534ab7;
   --gold:#c9a227;
-  /* 付箋色 — 黄/ピンク/水色/萌黄 */
   --pin-yellow:#fff2a8;
   --pin-pink:#ffd1dc;
   --pin-blue:#cfe7f5;
@@ -25,7 +24,6 @@
 html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-family:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;-webkit-font-smoothing:antialiased}
 body{padding:0;min-height:100vh}
 
-/* ===== Header ===== */
 header{
   padding:24px 28px 12px;
   border-bottom:1px solid var(--line);
@@ -33,19 +31,12 @@ header{
   background:var(--cream);
   position:sticky;top:0;z-index:50;
 }
-header h1{
-  margin:0;font-size:32px;font-weight:600;letter-spacing:-.01em;
-}
-header h1 .en{
-  font-family:"Zen Old Mincho",serif;font-size:13px;color:var(--sub);
-  margin-left:10px;letter-spacing:.04em;
-}
-header .tagline{
-  color:var(--sub);font-size:13px;margin-left:auto;line-height:1.5;text-align:right;
-}
+header h1{margin:0;font-size:32px;font-weight:600;letter-spacing:-.01em}
+header h1 .en{font-family:"Zen Old Mincho",serif;font-size:13px;color:var(--sub);margin-left:10px;letter-spacing:.04em}
+header h1 .ver{font-size:11px;color:var(--coral);margin-left:6px;vertical-align:middle}
+header .tagline{color:var(--sub);font-size:13px;margin-left:auto;line-height:1.5;text-align:right}
 header .tagline em{color:var(--coral);font-style:normal}
 
-/* ===== Toolbar ===== */
 .toolbar{
   display:flex;gap:10px;flex-wrap:wrap;align-items:center;
   padding:14px 28px;border-bottom:1px solid var(--line);background:var(--cream);
@@ -59,14 +50,18 @@ header .tagline em{color:var(--coral);font-style:normal}
 .toolbar button:hover{background:#f4f1ea}
 .toolbar .primary{background:var(--ink);color:#fff;border-color:var(--ink)}
 .toolbar .primary:hover{background:#000}
-.toolbar .meta{color:var(--sub);font-size:12px;margin-left:auto}
+.toolbar .meta{color:var(--sub);font-size:12px;margin-left:auto;display:flex;gap:10px;align-items:center}
+.toolbar .meta .mirror-status{padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500}
+.toolbar .meta .mirror-status.on{background:#d4ecc6;color:#1d6b40}
+.toolbar .meta .mirror-status.off{background:#eee;color:#999}
+.toolbar .meta .mirror-status.err{background:#ffd1dc;color:#a02040}
 .toolbar .tag-pill{
   display:inline-block;padding:3px 9px;border:1px solid var(--line);border-radius:99px;
   font-size:12px;background:#fff;cursor:pointer;color:var(--sub);
 }
 .toolbar .tag-pill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.toolbar select.sort-select{padding:7px 10px}
 
-/* ===== Wall ===== */
 .wall{
   padding:36px 24px 96px;
   display:grid;
@@ -79,7 +74,18 @@ header .tagline em{color:var(--coral);font-style:normal}
   padding:60px 40px 200px;
 }
 
-/* ===== Pin (one card) ===== */
+/* Group cluster (隣接配置) */
+.group-cluster{
+  position:relative;
+}
+.group-cluster .group-badge{
+  position:absolute;top:-10px;right:-8px;
+  background:var(--coral);color:#fff;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:99px;z-index:10;
+  font-family:"Zen Old Mincho",serif;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
 .pin{
   position:relative;
   background:var(--pin-yellow);
@@ -107,118 +113,92 @@ header .tagline em{color:var(--coral);font-style:normal}
   box-shadow:0 2px 3px rgba(0,0,0,.35);
   pointer-events:none;
 }
-.pin img{
-  display:block;width:100%;height:auto;background:#eee;
-  border:1px solid rgba(0,0,0,.06);
-}
-.pin .pin-title{
-  font-size:13px;line-height:1.4;margin:10px 2px 4px;color:var(--ink);
-  font-weight:500;
-}
-.pin .pin-tags{
-  font-size:10.5px;color:var(--sub);letter-spacing:.02em;
-}
-.pin .pin-tags span{
-  display:inline-block;margin-right:5px;background:rgba(0,0,0,.06);
-  padding:1px 6px;border-radius:2px;
+.pin img{display:block;width:100%;height:auto;background:#eee;border:1px solid rgba(0,0,0,.06)}
+.pin .pin-title{font-size:13px;line-height:1.4;margin:10px 2px 4px;color:var(--ink);font-weight:500}
+.pin .pin-tags{font-size:10.5px;color:var(--sub);letter-spacing:.02em}
+.pin .pin-tags span{display:inline-block;margin-right:5px;background:rgba(0,0,0,.06);padding:1px 6px;border-radius:2px}
+.pin .pin-mirror-mark{
+  position:absolute;bottom:6px;right:6px;font-size:11px;
+  background:rgba(29,158,117,.15);color:#1d6b40;padding:1px 5px;border-radius:2px;
 }
 .pin.no-image .imgslot{
   width:100%;aspect-ratio:1/1;background:rgba(0,0,0,.04);
-  display:flex;align-items:center;justify-content:center;
-  color:var(--sub);font-size:11px;
+  display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:11px;
 }
-
-/* 付箋色 variants */
 .pin.c-yellow{background:var(--pin-yellow)}
 .pin.c-pink{background:var(--pin-pink)}
 .pin.c-blue{background:var(--pin-blue)}
 .pin.c-green{background:var(--pin-green)}
 .pin.c-purple{background:var(--pin-purple)}
 
-/* ===== Modal (add pin / detail) ===== */
-.modal{
-  position:fixed;inset:0;background:rgba(20,20,20,.65);
-  display:none;align-items:center;justify-content:center;z-index:100;
-  padding:20px;
-}
+.modal{position:fixed;inset:0;background:rgba(20,20,20,.65);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal.open{display:flex}
-.modal .panel{
-  background:var(--cream);width:min(640px,100%);max-height:90vh;overflow:auto;
-  padding:28px;border-radius:6px;box-shadow:0 24px 64px rgba(0,0,0,.4);
-}
+.modal .panel{background:var(--cream);width:min(640px,100%);max-height:90vh;overflow:auto;padding:28px;border-radius:6px;box-shadow:0 24px 64px rgba(0,0,0,.4)}
 .modal h2{margin:0 0 16px;font-size:20px}
 .modal label{display:block;font-size:12px;color:var(--sub);margin:14px 0 4px}
-.modal input[type="text"], .modal input[type="url"], .modal textarea, .modal select{
+.modal input[type="text"], .modal input[type="url"], .modal input[type="password"], .modal textarea, .modal select{
   width:100%;padding:9px 11px;border:1px solid var(--line);background:#fff;
   font-family:inherit;font-size:13px;border-radius:3px;
 }
 .modal textarea{min-height:90px;resize:vertical;font-family:"Menlo","Consolas",monospace;font-size:12px}
 .modal .row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
-.modal button{
-  padding:9px 16px;border:1px solid var(--line);background:#fff;cursor:pointer;
-  font-family:inherit;font-size:13px;border-radius:3px;
-}
+.modal button{padding:9px 16px;border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;font-size:13px;border-radius:3px}
 .modal button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
-.modal .preview{
-  margin-top:8px;max-width:200px;max-height:140px;border:1px dashed var(--line);
-  display:block;background:#fff;
-}
+.modal .preview{margin-top:8px;max-width:200px;max-height:140px;border:1px dashed var(--line);display:block;background:#fff}
 .modal .meta-row{font-size:11px;color:var(--sub);margin-top:4px}
 .modal .source-tabs{display:flex;gap:6px;margin-bottom:8px}
-.modal .source-tabs button{
-  flex:1;padding:6px 8px;font-size:12px;
-  border:1px solid var(--line);background:#fff;cursor:pointer;
-}
+.modal .source-tabs button{flex:1;padding:6px 8px;font-size:12px;border:1px solid var(--line);background:#fff;cursor:pointer}
 .modal .source-tabs button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.modal .toggle-row{display:flex;align-items:center;gap:10px;margin-top:14px}
+.modal .toggle-row input[type="checkbox"]{width:18px;height:18px}
+.modal .info-box{background:#f4f1ea;padding:10px 12px;border-radius:3px;font-size:12px;line-height:1.6;color:var(--sub);margin-top:10px}
+.modal .info-box code{background:rgba(0,0,0,.06);padding:1px 5px;font-size:11px;border-radius:2px}
+.modal .test-result{margin-top:8px;padding:8px 10px;border-radius:3px;font-size:12px}
+.modal .test-result.ok{background:#d4ecc6;color:#1d6b40}
+.modal .test-result.err{background:#ffd1dc;color:#a02040}
 
-/* ===== Detail view ===== */
 .detail .preview-img{width:100%;height:auto;background:#eee;margin-bottom:14px;border:1px solid var(--line)}
 .detail dl{display:grid;grid-template-columns:96px 1fr;gap:6px 12px;font-size:13px;margin:0}
 .detail dt{color:var(--sub);font-size:12px}
-.detail .prompt-text{
-  margin-top:14px;padding:10px;background:#fff;border:1px solid var(--line);
-  font-family:"Menlo","Consolas",monospace;font-size:11.5px;line-height:1.5;
-  white-space:pre-wrap;word-break:break-word;
-}
+.detail .prompt-text{margin-top:14px;padding:10px;background:#fff;border:1px solid var(--line);font-family:"Menlo","Consolas",monospace;font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.detail .group-info{margin-top:12px;padding:8px 12px;background:rgba(216,90,48,.08);border-left:3px solid var(--coral);font-size:12px;color:var(--ink)}
+.detail .group-info a{color:var(--coral);cursor:pointer;text-decoration:underline}
 
-/* ===== Empty state ===== */
-.empty{
-  text-align:center;padding:80px 30px;color:var(--sub);
-  font-size:14px;line-height:1.8;
-}
+.empty{text-align:center;padding:80px 30px;color:var(--sub);font-size:14px;line-height:1.8}
 .empty .big{font-size:48px;margin-bottom:14px;opacity:.4}
-.empty button{
-  margin-top:18px;padding:10px 20px;background:var(--ink);color:#fff;
-  border:none;font-family:inherit;font-size:13px;cursor:pointer;border-radius:3px;
-}
+.empty button{margin-top:18px;padding:10px 20px;background:var(--ink);color:#fff;border:none;font-family:inherit;font-size:13px;cursor:pointer;border-radius:3px}
 
-/* ===== Footer ===== */
-footer{
-  padding:24px 28px;border-top:1px solid var(--line);
-  font-size:11px;color:var(--sub);text-align:center;
-}
+footer{padding:24px 28px;border-top:1px solid var(--line);font-size:11px;color:var(--sub);text-align:center}
 footer a{color:var(--sub)}
-
-/* 無秩序感: 微回転と微サイズ揺れは JS で個別付与 */
 </style>
 </head>
 <body>
 
 <header>
-  <h1>画鋲<span class="en">gabyo / pin-wall</span></h1>
+  <h1>画鋲<span class="en">gabyo / pin-wall</span><span class="ver">v0.2</span></h1>
   <div class="tagline">
     思想とは関係なく、<em>いま作った画像</em>を貼る場。<br>
-    削除なし、整理なし — <em>腐葉土設計</em>の即時実装。
+    <em>グルーピング</em> + <em>固定ソート</em> + <em>Notion mirror</em>
   </div>
 </header>
 
 <div class="toolbar">
   <button class="primary" id="btn-add">＋ ピンを追加</button>
   <button id="btn-layout">レイアウト切替</button>
-  <button id="btn-export">エクスポート (JSON)</button>
+  <select class="sort-select" id="sort-select">
+    <option value="newest">新しい順</option>
+    <option value="oldest">古い順</option>
+    <option value="shuffle">シャッフル(固定)</option>
+  </select>
+  <button id="btn-reshuffle" style="display:none">🔀 シャッフルし直し</button>
+  <button id="btn-export">エクスポート</button>
   <button id="btn-import">インポート</button>
+  <button id="btn-settings">⚙</button>
   <input type="file" id="import-file" accept="application/json" style="display:none">
-  <span class="meta" id="meta-info">0件</span>
+  <span class="meta">
+    <span id="meta-info">0件</span>
+    <span id="mirror-status" class="mirror-status off">mirror OFF</span>
+  </span>
 </div>
 
 <div class="toolbar" id="tag-bar" style="top:130px"><span style="font-size:12px;color:var(--sub)">タグ:</span></div>
@@ -236,13 +216,11 @@ footer a{color:var(--sub)}
 <div class="modal" id="add-modal">
   <div class="panel">
     <h2>ピンを追加</h2>
-
     <div class="source-tabs">
       <button class="active" data-src="url">URL貼り付け</button>
       <button data-src="upload">ファイルアップロード</button>
       <button data-src="none">画像なし（メモのみ）</button>
     </div>
-
     <div id="src-url-block">
       <label>画像URL</label>
       <input type="url" id="in-image-url" placeholder="https://example.com/image.png">
@@ -252,22 +230,16 @@ footer a{color:var(--sub)}
       <input type="file" id="in-image-file" accept="image/*">
       <img id="upload-preview" class="preview" style="display:none">
     </div>
-
     <label>タイトル</label>
     <input type="text" id="in-title" placeholder="例: 砂の三面図テスト #1">
-
-    <label>プロンプト（生成時の指示文）</label>
+    <label>プロンプト（生成時の指示文 — 同じ文字列なら自動グループ化）</label>
     <textarea id="in-prompt" placeholder="サハラ砂漠の砂粒、正面・側面・断面..."></textarea>
-
     <label>タグ（カンマ区切り）</label>
     <input type="text" id="in-tags" placeholder="素材図鑑, 第1章砂, 三面図">
-
     <label>生成モデル</label>
     <input type="text" id="in-model" value="gpt-image-2" placeholder="gpt-image-2 / midjourney / その他">
-
     <label>関連プロジェクト（任意）</label>
-    <input type="text" id="in-project" placeholder="kdp-shibainai-zukan">
-
+    <input type="text" id="in-project" placeholder="kdp-jinrui-no-sozai-zukan">
     <div class="row">
       <button onclick="closeAddModal()">キャンセル</button>
       <button class="primary" onclick="addPin()">貼る</button>
@@ -285,37 +257,91 @@ footer a{color:var(--sub)}
       <dt>生成日時</dt><dd id="detail-date">—</dd>
       <dt>タグ</dt><dd id="detail-tags">—</dd>
       <dt>関連</dt><dd id="detail-project">—</dd>
+      <dt>Notion</dt><dd id="detail-notion">—</dd>
       <dt>schema</dt><dd id="detail-schema">—</dd>
     </dl>
     <div class="prompt-text" id="detail-prompt">（プロンプトなし）</div>
+    <div id="detail-group-info"></div>
     <div class="row">
       <button onclick="closeDetailModal()">閉じる</button>
     </div>
   </div>
 </div>
 
+<!-- ===== Settings modal ===== -->
+<div class="modal" id="settings-modal">
+  <div class="panel">
+    <h2>⚙ 設定</h2>
+
+    <h3 style="font-size:14px;margin-top:8px;color:var(--coral)">Notion Mirror</h3>
+    <div class="info-box">
+      ピン追加時に Notion <code>📌 画鋲DB</code> に自動投入する設定。<br>
+      <strong>事前にCloudflare Workerが必要</strong>（CORS回避のため）。Worker未設定だとmirrorは無効化されます。<br>
+      Worker雛形 → <code>worker/notion-mirror-worker.js</code> 参照、deploy 5分。
+    </div>
+
+    <label>Worker URL（例: https://pin-wall-mirror.your-subdomain.workers.dev）</label>
+    <input type="url" id="in-worker-url" placeholder="https://...workers.dev">
+
+    <label>Notion Integration Token (PAT)</label>
+    <input type="password" id="in-notion-pat" placeholder="ntn_...">
+    <div class="meta-row">localStorage に保存。外部送信は Worker 経由のみ。</div>
+
+    <label>Notion DB ID（既定値: 画鋲DB）</label>
+    <input type="text" id="in-notion-db-id" value="7ec3970d-7308-46d4-9830-27fcbbeb3824">
+
+    <div class="toggle-row">
+      <input type="checkbox" id="in-mirror-enabled">
+      <label for="in-mirror-enabled" style="margin:0;font-size:13px;color:var(--ink)">Notion mirror を有効化（ピン追加時に自動投入）</label>
+    </div>
+
+    <div class="row" style="margin-top:14px;justify-content:flex-start">
+      <button id="btn-test-conn">接続テスト</button>
+      <button id="btn-mirror-all">既存ピン全件mirror（バッチ）</button>
+    </div>
+    <div id="conn-test-result"></div>
+
+    <hr style="margin:24px 0;border:none;border-top:1px solid var(--line)">
+
+    <h3 style="font-size:14px;margin-top:8px">表示</h3>
+    <label>レイアウト初期値</label>
+    <select id="in-layout-mode">
+      <option value="grid">グリッド</option>
+      <option value="scatter">散布</option>
+    </select>
+
+    <div class="row">
+      <button onclick="closeSettingsModal()">キャンセル</button>
+      <button class="primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
 <footer>
-  画鋲（gabyo / pin-wall） v0.1 — osakenpiro / TRBP — Hi-Me TooL<br>
-  腐葉土設計: ピンは削除されません。古いピンも opacity を通じて記録に残ります。<br>
-  schema_version: 1.0 / data: localStorage のみ（外部送信なし）
+  画鋲（gabyo / pin-wall） v0.2 — osakenpiro / TRBP — Hi-Me TooL<br>
+  腐葉土設計: ピンは削除されません。schema_version: 1.1 / data: localStorage（PAT含む）<br>
+  Notion mirror: Cloudflare Worker proxy 経由（CORS回避）
 </footer>
 
 <script>
 /* =====================================================
-   画鋲（pin-wall） v0.1
-   AI進化織り込み 6原則 遵守:
-   1) data/render 分離  2) 生成元API非依存  3) schema_version
-   4) prompt保存  5) メタ追記型  6) 3経路画像追加
+   画鋲（pin-wall） v0.2
+   v0.1 + グルーピング + 固定ソート + Notion mirror
 ===================================================== */
 
-const SCHEMA_VERSION = "1.0";
+const SCHEMA_VERSION = "1.1";
 const STORAGE_KEY = "pin_wall_v1";
+const PAT_KEY = "pin_wall_notion_pat";
+const WORKER_URL_KEY = "pin_wall_worker_url";
+const DB_ID_KEY = "pin_wall_db_id";
+const DEFAULT_DB_ID = "7ec3970d-7308-46d4-9830-27fcbbeb3824";
 
 const PIN_COLORS = ["c-yellow","c-pink","c-blue","c-green","c-purple"];
 
 let state = loadState();
-let activeFilter = null; // タグフィルタ
+let activeFilter = null;
 let currentLayout = state.settings.layout_mode || "grid";
+let currentSort = state.settings.sort_mode || "newest";
 
 function defaultState(){
   return {
@@ -323,8 +349,11 @@ function defaultState(){
     pins:[],
     settings:{
       layout_mode:"grid",
+      sort_mode:"newest",
+      shuffled_order:[],
       filter_tags:[],
-      show_meta:false
+      show_meta:false,
+      mirror_enabled:false
     },
     history: [{ ts:new Date().toISOString(), event:"init" }]
   };
@@ -335,8 +364,17 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return defaultState();
     const s = JSON.parse(raw);
-    // schema migration hook
-    if(!s.schema_version){ s.schema_version = SCHEMA_VERSION; }
+    // schema migration
+    if(!s.schema_version || s.schema_version === "1.0"){
+      // v1.0 -> v1.1: prompt_text から group_key を再計算
+      (s.pins||[]).forEach(p=>{
+        if(!p.group_key) p.group_key = computeGroupKey(p.prompt_text || "");
+      });
+      s.schema_version = SCHEMA_VERSION;
+    }
+    if(!s.settings.sort_mode) s.settings.sort_mode = "newest";
+    if(!s.settings.shuffled_order) s.settings.shuffled_order = [];
+    if(s.settings.mirror_enabled === undefined) s.settings.mirror_enabled = false;
     if(!s.history) s.history = [];
     return s;
   }catch(e){
@@ -349,20 +387,27 @@ function saveState(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }catch(e){
     alert("保存失敗: localStorage 上限の可能性あり (画像base64で容量肥大化)");
-    console.error(e);
   }
 }
 
-/* ===== 無秩序感ヘルパー ===== */
 function rand(min,max){ return Math.random()*(max-min)+min; }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
 function makePinAttrs(){
   return {
     rotation_deg: rand(-4.5, 4.5),
     color_class: pick(PIN_COLORS),
     width_pct: rand(85, 115)
   };
+}
+
+/* ===== Group key (v0.2 A) ===== */
+function computeGroupKey(prompt){
+  const norm = (prompt||"").trim().toLowerCase().replace(/\s+/g, " ");
+  if(!norm) return null;
+  // 簡易hash
+  let h = 0;
+  for(let i=0;i<norm.length;i++){ h = ((h<<5)-h) + norm.charCodeAt(i); h |= 0; }
+  return "g_" + Math.abs(h).toString(36).slice(0,8);
 }
 
 /* ===== add pin ===== */
@@ -378,7 +423,6 @@ function closeAddModal(){
   document.getElementById("upload-preview").style.display="none";
   document.getElementById("upload-preview").src="";
   document.getElementById("in-model").value="gpt-image-2";
-  // reset tabs
   document.querySelectorAll('.source-tabs button').forEach(b=>b.classList.remove('active'));
   document.querySelector('.source-tabs button[data-src="url"]').classList.add('active');
   switchSource("url");
@@ -402,14 +446,14 @@ function bindUpload(){
   });
 }
 
-function addPin(){
+async function addPin(){
   const activeTab = document.querySelector('.source-tabs button.active').dataset.src;
   let img = "";
   if(activeTab === "url"){
     img = document.getElementById("in-image-url").value.trim();
   }else if(activeTab === "upload"){
     img = _uploadDataUrl || "";
-  } // else "none"
+  }
 
   const title = document.getElementById("in-title").value.trim() || "(無題)";
   const prompt = document.getElementById("in-prompt").value;
@@ -437,14 +481,143 @@ function addPin(){
     width_pct: attrs.width_pct,
     z_index: state.pins.length + 1,
     schema_version: SCHEMA_VERSION,
+    group_key: computeGroupKey(prompt),
+    notion_page_id: null,
+    notion_page_url: null,
     history: [{ ts: now.toISOString(), event:"created", model }]
   };
 
   state.pins.unshift(pin);
+  // shuffle modeの順序にも追加
+  if(currentSort === "shuffle"){
+    state.settings.shuffled_order.unshift(pin.id);
+  }
   _uploadDataUrl = null;
   saveState();
+  renderTagBar();
   renderWall();
   closeAddModal();
+
+  // Notion mirror
+  if(state.settings.mirror_enabled){
+    mirrorToNotion(pin).catch(err=>{
+      console.warn("Notion mirror failed:", err);
+      flashMirrorError();
+    });
+  }
+}
+
+/* ===== Notion mirror (v0.2 C) ===== */
+async function mirrorToNotion(pin){
+  const workerUrl = localStorage.getItem(WORKER_URL_KEY);
+  const pat = localStorage.getItem(PAT_KEY);
+  const dbId = localStorage.getItem(DB_ID_KEY) || DEFAULT_DB_ID;
+  if(!workerUrl || !pat){
+    setMirrorStatus("err", "mirror未設定");
+    return;
+  }
+  setMirrorStatus("on", "mirror送信中…");
+
+  const properties = buildNotionProperties(pin);
+  const body = {
+    parent: { database_id: dbId },
+    properties
+  };
+
+  const res = await fetch(workerUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Notion-Token": pat
+    },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error("Worker error: " + res.status + " " + t.slice(0,200));
+  }
+  const data = await res.json();
+  pin.notion_page_id = data.id || null;
+  pin.notion_page_url = data.url || null;
+  pin.history.push({ ts:new Date().toISOString(), event:"mirrored", notion_page_id: pin.notion_page_id });
+  saveState();
+  renderWall();
+  setMirrorStatus("on", "mirror ON");
+}
+
+function buildNotionProperties(pin){
+  const tags = (pin.tags||[]).map(t => ({ name: t.slice(0,100) }));
+  const colorMap = {"c-yellow":"yellow","c-pink":"pink","c-blue":"blue","c-green":"green","c-purple":"purple"};
+  return {
+    "タイトル": { title: [{ text: { content: (pin.title||"(無題)").slice(0, 2000) } }] },
+    "画像URL": pin.image_url && pin.image_url.startsWith("http") ? { url: pin.image_url } : { url: null },
+    "プロンプト": { rich_text: [{ text: { content: (pin.prompt_text||"").slice(0, 2000) } }] },
+    "モデル": { rich_text: [{ text: { content: (pin.model||"unknown").slice(0, 200) } }] },
+    "タグ": { multi_select: tags },
+    "生成日時": { date: { start: pin.generated_at } },
+    "関連プロジェクト": { rich_text: [{ text: { content: (pin.linked_project||"").slice(0, 500) } }] },
+    "ピンID": { rich_text: [{ text: { content: pin.id } }] },
+    "色": pin.color_class ? { select: { name: colorMap[pin.color_class] || "yellow" } } : undefined,
+    "回転deg": { number: pin.rotation_deg || 0 },
+    "schema_version": { rich_text: [{ text: { content: pin.schema_version || SCHEMA_VERSION } }] }
+  };
+}
+
+function setMirrorStatus(state_, text){
+  const el = document.getElementById("mirror-status");
+  el.className = "mirror-status " + state_;
+  el.textContent = text;
+}
+function flashMirrorError(){
+  setMirrorStatus("err", "mirror失敗");
+  setTimeout(()=>{
+    if(state.settings.mirror_enabled){
+      setMirrorStatus("on", "mirror ON");
+    }else{
+      setMirrorStatus("off", "mirror OFF");
+    }
+  }, 4000);
+}
+
+async function testNotionConnection(){
+  const workerUrl = document.getElementById("in-worker-url").value.trim();
+  const pat = document.getElementById("in-notion-pat").value.trim();
+  const result = document.getElementById("conn-test-result");
+  result.textContent = "テスト中…";
+  result.className = "test-result";
+  if(!workerUrl || !pat){
+    result.textContent = "Worker URL と PAT を入力してください";
+    result.className = "test-result err";
+    return;
+  }
+  try{
+    const res = await fetch(workerUrl + "?ping=1", {
+      method: "GET",
+      headers: { "X-Notion-Token": pat }
+    });
+    if(res.ok){
+      const data = await res.json();
+      result.textContent = "✓ 接続成功: " + (data.bot ? `bot=${data.bot.name||"?"}` : "Worker reachable");
+      result.className = "test-result ok";
+    }else{
+      result.textContent = "✗ HTTP " + res.status + " " + (await res.text()).slice(0,100);
+      result.className = "test-result err";
+    }
+  }catch(e){
+    result.textContent = "✗ 接続失敗: " + e.message;
+    result.className = "test-result err";
+  }
+}
+
+async function mirrorAllPins(){
+  if(!confirm(`既存の ${state.pins.filter(p=>!p.notion_page_id).length} 件 (mirror未送信のみ) をNotionに送信します。OK?`)) return;
+  let ok=0, ng=0;
+  for(const pin of state.pins){
+    if(pin.notion_page_id) continue;
+    try{ await mirrorToNotion(pin); ok++; }
+    catch(e){ ng++; console.error(pin.id, e); }
+  }
+  alert(`完了: 成功 ${ok}件 / 失敗 ${ng}件`);
 }
 
 /* ===== detail ===== */
@@ -459,13 +632,28 @@ function openDetail(id){
   document.getElementById("detail-date").textContent = p.generated_at || "—";
   document.getElementById("detail-tags").textContent = (p.tags||[]).join(", ") || "—";
   document.getElementById("detail-project").textContent = p.linked_project || "—";
+  document.getElementById("detail-notion").innerHTML = p.notion_page_url
+    ? `<a href="${escapeAttr(p.notion_page_url)}" target="_blank" style="color:var(--coral)">Notionで開く ↗</a>`
+    : "—";
   document.getElementById("detail-schema").textContent = p.schema_version || "—";
   document.getElementById("detail-prompt").textContent = p.prompt_text || "（プロンプトなし）";
+
+  // group info
+  const groupInfo = document.getElementById("detail-group-info");
+  if(p.group_key){
+    const sibs = state.pins.filter(x=>x.group_key === p.group_key);
+    if(sibs.length > 1){
+      groupInfo.innerHTML = `<div class="group-info">📎 同プロンプト ${sibs.length} 件のグループ — ` +
+        sibs.map(s => s.id===p.id
+          ? `<strong>${escapeHtml(s.title||"(無題)")}</strong>`
+          : `<a onclick="openDetail('${s.id}')">${escapeHtml(s.title||"(無題)")}</a>`
+        ).join(" / ") + `</div>`;
+    } else { groupInfo.innerHTML = ""; }
+  } else { groupInfo.innerHTML = ""; }
+
   document.getElementById("detail-modal").classList.add("open");
 }
-function closeDetailModal(){
-  document.getElementById("detail-modal").classList.remove("open");
-}
+function closeDetailModal(){ document.getElementById("detail-modal").classList.remove("open"); }
 
 /* ===== filter ===== */
 function allTags(){
@@ -490,45 +678,104 @@ function renderTagBar(){
   });
 }
 
+/* ===== sort + group (v0.2 A+B) ===== */
+function getSortedPins(){
+  let pins = activeFilter
+    ? state.pins.filter(p => (p.tags||[]).includes(activeFilter))
+    : state.pins.slice();
+
+  if(currentSort === "newest"){
+    pins.sort((a,b) => (b.generated_at||"").localeCompare(a.generated_at||""));
+  } else if(currentSort === "oldest"){
+    pins.sort((a,b) => (a.generated_at||"").localeCompare(b.generated_at||""));
+  } else if(currentSort === "shuffle"){
+    // 固定シャッフル: shuffled_order の順序で並べる
+    const order = state.settings.shuffled_order || [];
+    const idMap = new Map(pins.map(p=>[p.id, p]));
+    const ordered = [];
+    order.forEach(id => { if(idMap.has(id)){ ordered.push(idMap.get(id)); idMap.delete(id); } });
+    // orderにないものは末尾に
+    idMap.forEach(p => ordered.push(p));
+    pins = ordered;
+  }
+
+  // グルーピング: 同 group_key を隣接配置（最初に出現した位置にまとめる）
+  if(currentSort !== "shuffle"){ // shuffle時は混沌を維持するためグループ化しない
+    const seen = new Set();
+    const grouped = [];
+    pins.forEach(p => {
+      if(p.group_key && seen.has(p.group_key)) return;
+      grouped.push(p);
+      if(p.group_key){
+        seen.add(p.group_key);
+        // 同groupの他をすぐ後ろに
+        pins.forEach(q => {
+          if(q.id !== p.id && q.group_key === p.group_key) grouped.push(q);
+        });
+      }
+    });
+    return grouped;
+  }
+  return pins;
+}
+
+function reshuffle(){
+  const ids = state.pins.map(p=>p.id);
+  for(let i=ids.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [ids[i],ids[j]] = [ids[j],ids[i]];
+  }
+  state.settings.shuffled_order = ids;
+  saveState();
+  renderWall();
+}
+
 /* ===== render ===== */
 function renderWall(){
   const wall = document.getElementById("wall");
   wall.className = "wall " + currentLayout;
   wall.innerHTML = "";
-  const pins = activeFilter
-    ? state.pins.filter(p => (p.tags||[]).includes(activeFilter))
-    : state.pins;
+  const pins = getSortedPins();
   document.getElementById("meta-info").textContent = pins.length + "件" + (activeFilter?` (#${activeFilter})`:"");
   document.getElementById("empty").style.display = (state.pins.length===0)?"":"none";
+
+  // group_key ごとのカウント
+  const groupCounts = {};
+  state.pins.forEach(p => { if(p.group_key) groupCounts[p.group_key] = (groupCounts[p.group_key]||0) + 1; });
 
   pins.forEach((p, i)=>{
     const el = document.createElement("div");
     el.className = "pin " + (p.color_class || "c-yellow") + (p.image_url?"":" no-image");
 
-    // 腐葉土: 古いピンほどopacity下げる（ただし一定下限あり）
-    const idx = state.pins.indexOf(p);
     const total = state.pins.length;
-    const decayOpacity = total > 1 ? (1 - (idx/total)*0.45) : 1; // 1.0 → 0.55
+    const idx = state.pins.indexOf(p);
+    const decayOpacity = total > 1 ? (1 - (idx/total)*0.45) : 1;
     const opacity = Math.max(decayOpacity, 0.55);
-
     const rot = p.rotation_deg || 0;
     const w = p.width_pct || 100;
     el.style.transform = `rotate(${rot.toFixed(2)}deg)`;
     el.style.opacity = opacity.toFixed(2);
 
     if(currentLayout === "scatter"){
-      // 散布配置: コンテナ幅内ランダム配置
       el.style.position="absolute";
       el.style.left = rand(2, 78) + "%";
       el.style.top = (i * 110) + "px";
       el.style.width = (180 + rand(-20, 40)) + "px";
     }else{
-      // grid: width微揺れ
       el.style.width = w + "%";
       el.style.justifySelf = pick(["start","center","end"]);
     }
 
     let inner = '<div class="pinhead"></div>';
+
+    // group badge: 同group_keyの最初の1枚だけ表示
+    if(p.group_key && groupCounts[p.group_key] > 1){
+      const isFirstOfGroup = pins.findIndex(x=>x.group_key === p.group_key) === pins.indexOf(p);
+      if(isFirstOfGroup){
+        inner += `<div class="group-badge">×${groupCounts[p.group_key]}</div>`;
+      }
+    }
+
     if(p.image_url){
       inner += `<img src="${escapeAttr(p.image_url)}" alt="">`;
     }else{
@@ -540,6 +787,9 @@ function renderWall(){
         p.tags.slice(0,4).map(t=>`<span>#${escapeHtml(t)}</span>`).join("") +
         '</div>';
     }
+    if(p.notion_page_url){
+      inner += `<div class="pin-mirror-mark">N</div>`;
+    }
     el.innerHTML = inner;
     el.onclick = ()=>openDetail(p.id);
     wall.appendChild(el);
@@ -549,10 +799,21 @@ function renderWall(){
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
 function escapeAttr(s){ return escapeHtml(s); }
 
-/* ===== layout toggle ===== */
+/* ===== layout & sort ===== */
 function toggleLayout(){
   currentLayout = (currentLayout === "grid") ? "scatter" : "grid";
   state.settings.layout_mode = currentLayout;
+  saveState();
+  renderWall();
+}
+function changeSort(val){
+  currentSort = val;
+  state.settings.sort_mode = val;
+  if(val === "shuffle" && (!state.settings.shuffled_order || state.settings.shuffled_order.length === 0)){
+    reshuffle();
+    return;
+  }
+  document.getElementById("btn-reshuffle").style.display = (val === "shuffle") ? "" : "none";
   saveState();
   renderWall();
 }
@@ -568,9 +829,7 @@ function exportData(){
   a.click();
   URL.revokeObjectURL(url);
 }
-function importData(){
-  document.getElementById("import-file").click();
-}
+function importData(){ document.getElementById("import-file").click(); }
 function bindImport(){
   document.getElementById("import-file").addEventListener("change",(e)=>{
     const f = e.target.files[0]; if(!f) return;
@@ -581,7 +840,12 @@ function bindImport(){
         if(!incoming.pins || !Array.isArray(incoming.pins)){ alert("形式不正"); return; }
         if(confirm(`既存${state.pins.length}件と統合します。重複idはskip。続行？`)){
           const ids = new Set(state.pins.map(p=>p.id));
-          incoming.pins.forEach(p=>{ if(!ids.has(p.id)) state.pins.push(p); });
+          incoming.pins.forEach(p=>{
+            if(!ids.has(p.id)){
+              if(!p.group_key) p.group_key = computeGroupKey(p.prompt_text||"");
+              state.pins.push(p);
+            }
+          });
           saveState(); renderTagBar(); renderWall();
         }
       }catch(err){ alert("読み込み失敗: "+err.message); }
@@ -590,11 +854,67 @@ function bindImport(){
   });
 }
 
+/* ===== Settings ===== */
+function openSettingsModal(){
+  document.getElementById("in-worker-url").value = localStorage.getItem(WORKER_URL_KEY) || "";
+  document.getElementById("in-notion-pat").value = localStorage.getItem(PAT_KEY) || "";
+  document.getElementById("in-notion-db-id").value = localStorage.getItem(DB_ID_KEY) || DEFAULT_DB_ID;
+  document.getElementById("in-mirror-enabled").checked = state.settings.mirror_enabled;
+  document.getElementById("in-layout-mode").value = currentLayout;
+  document.getElementById("conn-test-result").textContent = "";
+  document.getElementById("conn-test-result").className = "";
+  document.getElementById("settings-modal").classList.add("open");
+}
+function closeSettingsModal(){ document.getElementById("settings-modal").classList.remove("open"); }
+function saveSettings(){
+  const workerUrl = document.getElementById("in-worker-url").value.trim();
+  const pat = document.getElementById("in-notion-pat").value.trim();
+  const dbId = document.getElementById("in-notion-db-id").value.trim() || DEFAULT_DB_ID;
+  const enabled = document.getElementById("in-mirror-enabled").checked;
+  const layoutMode = document.getElementById("in-layout-mode").value;
+
+  if(workerUrl) localStorage.setItem(WORKER_URL_KEY, workerUrl);
+  else localStorage.removeItem(WORKER_URL_KEY);
+  if(pat) localStorage.setItem(PAT_KEY, pat);
+  else localStorage.removeItem(PAT_KEY);
+  localStorage.setItem(DB_ID_KEY, dbId);
+
+  // mirror有効化前提条件
+  if(enabled && (!workerUrl || !pat)){
+    alert("Worker URL と PAT の両方が必要です。mirror は OFF にします。");
+    state.settings.mirror_enabled = false;
+  }else{
+    state.settings.mirror_enabled = enabled;
+  }
+  currentLayout = layoutMode;
+  state.settings.layout_mode = layoutMode;
+
+  saveState();
+  refreshMirrorStatus();
+  renderWall();
+  closeSettingsModal();
+}
+function refreshMirrorStatus(){
+  if(state.settings.mirror_enabled){
+    setMirrorStatus("on", "mirror ON");
+  }else{
+    setMirrorStatus("off", "mirror OFF");
+  }
+}
+
 /* ===== bind ===== */
 document.getElementById("btn-add").onclick = openAddModal;
 document.getElementById("btn-layout").onclick = toggleLayout;
 document.getElementById("btn-export").onclick = exportData;
 document.getElementById("btn-import").onclick = importData;
+document.getElementById("btn-settings").onclick = openSettingsModal;
+document.getElementById("btn-test-conn").onclick = testNotionConnection;
+document.getElementById("btn-mirror-all").onclick = mirrorAllPins;
+document.getElementById("btn-reshuffle").onclick = reshuffle;
+document.getElementById("sort-select").value = currentSort;
+document.getElementById("sort-select").onchange = (e)=>changeSort(e.target.value);
+if(currentSort === "shuffle") document.getElementById("btn-reshuffle").style.display = "";
+
 document.querySelectorAll('.source-tabs button').forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll('.source-tabs button').forEach(x=>x.classList.remove('active'));
@@ -611,6 +931,7 @@ document.addEventListener("keydown",(e)=>{
   }
 });
 bindUpload(); bindImport();
+refreshMirrorStatus();
 renderTagBar(); renderWall();
 </script>
 </body>

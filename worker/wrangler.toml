@@ -1,0 +1,8 @@
+name = "pin-wall-mirror"
+main = "notion-mirror-worker.js"
+compatibility_date = "2025-01-01"
+
+# 必要なら独自ドメイン設定
+# routes = [
+#   { pattern = "pin-wall-mirror.your-domain.com/*", zone_name = "your-domain.com" }
+# ]
