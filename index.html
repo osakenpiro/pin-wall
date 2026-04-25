@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>画鋲（gabyo / pin-wall）— osakenpiro</title>
+<style>
+:root{
+  --cream:#faf9f6;
+  --ink:#1a1a1a;
+  --sub:#6b6b6b;
+  --line:#d4cfc4;
+  --coral:#d85a30;
+  --teal:#1d9e75;
+  --indigo:#534ab7;
+  --gold:#c9a227;
+  /* 付箋色 — 黄/ピンク/水色/萌黄 */
+  --pin-yellow:#fff2a8;
+  --pin-pink:#ffd1dc;
+  --pin-blue:#cfe7f5;
+  --pin-green:#d4ecc6;
+  --pin-purple:#e3d6f0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-family:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;-webkit-font-smoothing:antialiased}
+body{padding:0;min-height:100vh}
+
+/* ===== Header ===== */
+header{
+  padding:24px 28px 12px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;
+  background:var(--cream);
+  position:sticky;top:0;z-index:50;
+}
+header h1{
+  margin:0;font-size:32px;font-weight:600;letter-spacing:-.01em;
+}
+header h1 .en{
+  font-family:"Zen Old Mincho",serif;font-size:13px;color:var(--sub);
+  margin-left:10px;letter-spacing:.04em;
+}
+header .tagline{
+  color:var(--sub);font-size:13px;margin-left:auto;line-height:1.5;text-align:right;
+}
+header .tagline em{color:var(--coral);font-style:normal}
+
+/* ===== Toolbar ===== */
+.toolbar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  padding:14px 28px;border-bottom:1px solid var(--line);background:var(--cream);
+  position:sticky;top:80px;z-index:49;
+}
+.toolbar button, .toolbar select, .toolbar input[type="text"]{
+  font-family:inherit;font-size:13px;
+  padding:8px 12px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  border-radius:3px;cursor:pointer;
+}
+.toolbar button:hover{background:#f4f1ea}
+.toolbar .primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.toolbar .primary:hover{background:#000}
+.toolbar .meta{color:var(--sub);font-size:12px;margin-left:auto}
+.toolbar .tag-pill{
+  display:inline-block;padding:3px 9px;border:1px solid var(--line);border-radius:99px;
+  font-size:12px;background:#fff;cursor:pointer;color:var(--sub);
+}
+.toolbar .tag-pill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ===== Wall ===== */
+.wall{
+  padding:36px 24px 96px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:32px 22px;
+  position:relative;
+}
+.wall.scatter{
+  display:block;position:relative;height:auto;min-height:80vh;
+  padding:60px 40px 200px;
+}
+
+/* ===== Pin (one card) ===== */
+.pin{
+  position:relative;
+  background:var(--pin-yellow);
+  padding:14px 14px 18px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.05),
+    0 8px 18px rgba(0,0,0,.10),
+    0 24px 32px rgba(0,0,0,.04);
+  cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease;
+  break-inside:avoid;
+}
+.pin:hover{
+  transform:translateY(-3px) scale(1.02) rotate(0deg)!important;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,.06),
+    0 16px 28px rgba(0,0,0,.14),
+    0 32px 48px rgba(0,0,0,.06);
+  z-index:30;
+}
+.pin .pinhead{
+  position:absolute;top:-7px;left:50%;transform:translateX(-50%);
+  width:14px;height:14px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #ff8a8a, #c0392b 65%, #6b1c11);
+  box-shadow:0 2px 3px rgba(0,0,0,.35);
+  pointer-events:none;
+}
+.pin img{
+  display:block;width:100%;height:auto;background:#eee;
+  border:1px solid rgba(0,0,0,.06);
+}
+.pin .pin-title{
+  font-size:13px;line-height:1.4;margin:10px 2px 4px;color:var(--ink);
+  font-weight:500;
+}
+.pin .pin-tags{
+  font-size:10.5px;color:var(--sub);letter-spacing:.02em;
+}
+.pin .pin-tags span{
+  display:inline-block;margin-right:5px;background:rgba(0,0,0,.06);
+  padding:1px 6px;border-radius:2px;
+}
+.pin.no-image .imgslot{
+  width:100%;aspect-ratio:1/1;background:rgba(0,0,0,.04);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--sub);font-size:11px;
+}
+
+/* 付箋色 variants */
+.pin.c-yellow{background:var(--pin-yellow)}
+.pin.c-pink{background:var(--pin-pink)}
+.pin.c-blue{background:var(--pin-blue)}
+.pin.c-green{background:var(--pin-green)}
+.pin.c-purple{background:var(--pin-purple)}
+
+/* ===== Modal (add pin / detail) ===== */
+.modal{
+  position:fixed;inset:0;background:rgba(20,20,20,.65);
+  display:none;align-items:center;justify-content:center;z-index:100;
+  padding:20px;
+}
+.modal.open{display:flex}
+.modal .panel{
+  background:var(--cream);width:min(640px,100%);max-height:90vh;overflow:auto;
+  padding:28px;border-radius:6px;box-shadow:0 24px 64px rgba(0,0,0,.4);
+}
+.modal h2{margin:0 0 16px;font-size:20px}
+.modal label{display:block;font-size:12px;color:var(--sub);margin:14px 0 4px}
+.modal input[type="text"], .modal input[type="url"], .modal textarea, .modal select{
+  width:100%;padding:9px 11px;border:1px solid var(--line);background:#fff;
+  font-family:inherit;font-size:13px;border-radius:3px;
+}
+.modal textarea{min-height:90px;resize:vertical;font-family:"Menlo","Consolas",monospace;font-size:12px}
+.modal .row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.modal button{
+  padding:9px 16px;border:1px solid var(--line);background:#fff;cursor:pointer;
+  font-family:inherit;font-size:13px;border-radius:3px;
+}
+.modal button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.modal .preview{
+  margin-top:8px;max-width:200px;max-height:140px;border:1px dashed var(--line);
+  display:block;background:#fff;
+}
+.modal .meta-row{font-size:11px;color:var(--sub);margin-top:4px}
+.modal .source-tabs{display:flex;gap:6px;margin-bottom:8px}
+.modal .source-tabs button{
+  flex:1;padding:6px 8px;font-size:12px;
+  border:1px solid var(--line);background:#fff;cursor:pointer;
+}
+.modal .source-tabs button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ===== Detail view ===== */
+.detail .preview-img{width:100%;height:auto;background:#eee;margin-bottom:14px;border:1px solid var(--line)}
+.detail dl{display:grid;grid-template-columns:96px 1fr;gap:6px 12px;font-size:13px;margin:0}
+.detail dt{color:var(--sub);font-size:12px}
+.detail .prompt-text{
+  margin-top:14px;padding:10px;background:#fff;border:1px solid var(--line);
+  font-family:"Menlo","Consolas",monospace;font-size:11.5px;line-height:1.5;
+  white-space:pre-wrap;word-break:break-word;
+}
+
+/* ===== Empty state ===== */
+.empty{
+  text-align:center;padding:80px 30px;color:var(--sub);
+  font-size:14px;line-height:1.8;
+}
+.empty .big{font-size:48px;margin-bottom:14px;opacity:.4}
+.empty button{
+  margin-top:18px;padding:10px 20px;background:var(--ink);color:#fff;
+  border:none;font-family:inherit;font-size:13px;cursor:pointer;border-radius:3px;
+}
+
+/* ===== Footer ===== */
+footer{
+  padding:24px 28px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--sub);text-align:center;
+}
+footer a{color:var(--sub)}
+
+/* 無秩序感: 微回転と微サイズ揺れは JS で個別付与 */
+</style>
+</head>
+<body>
+
+<header>
+  <h1>画鋲<span class="en">gabyo / pin-wall</span></h1>
+  <div class="tagline">
+    思想とは関係なく、<em>いま作った画像</em>を貼る場。<br>
+    削除なし、整理なし — <em>腐葉土設計</em>の即時実装。
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="primary" id="btn-add">＋ ピンを追加</button>
+  <button id="btn-layout">レイアウト切替</button>
+  <button id="btn-export">エクスポート (JSON)</button>
+  <button id="btn-import">インポート</button>
+  <input type="file" id="import-file" accept="application/json" style="display:none">
+  <span class="meta" id="meta-info">0件</span>
+</div>
+
+<div class="toolbar" id="tag-bar" style="top:130px"><span style="font-size:12px;color:var(--sub)">タグ:</span></div>
+
+<div id="wall" class="wall grid"></div>
+
+<div class="empty" id="empty" style="display:none">
+  <div class="big">📌</div>
+  まだピンがありません。<br>
+  「＋ ピンを追加」から最初の画像を貼ってください。<br>
+  <button onclick="openAddModal()">最初のピンを貼る</button>
+</div>
+
+<!-- ===== Add modal ===== -->
+<div class="modal" id="add-modal">
+  <div class="panel">
+    <h2>ピンを追加</h2>
+
+    <div class="source-tabs">
+      <button class="active" data-src="url">URL貼り付け</button>
+      <button data-src="upload">ファイルアップロード</button>
+      <button data-src="none">画像なし（メモのみ）</button>
+    </div>
+
+    <div id="src-url-block">
+      <label>画像URL</label>
+      <input type="url" id="in-image-url" placeholder="https://example.com/image.png">
+    </div>
+    <div id="src-upload-block" style="display:none">
+      <label>画像ファイル</label>
+      <input type="file" id="in-image-file" accept="image/*">
+      <img id="upload-preview" class="preview" style="display:none">
+    </div>
+
+    <label>タイトル</label>
+    <input type="text" id="in-title" placeholder="例: 砂の三面図テスト #1">
+
+    <label>プロンプト（生成時の指示文）</label>
+    <textarea id="in-prompt" placeholder="サハラ砂漠の砂粒、正面・側面・断面..."></textarea>
+
+    <label>タグ（カンマ区切り）</label>
+    <input type="text" id="in-tags" placeholder="素材図鑑, 第1章砂, 三面図">
+
+    <label>生成モデル</label>
+    <input type="text" id="in-model" value="gpt-image-2" placeholder="gpt-image-2 / midjourney / その他">
+
+    <label>関連プロジェクト（任意）</label>
+    <input type="text" id="in-project" placeholder="kdp-shibainai-zukan">
+
+    <div class="row">
+      <button onclick="closeAddModal()">キャンセル</button>
+      <button class="primary" onclick="addPin()">貼る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Detail modal ===== -->
+<div class="modal" id="detail-modal">
+  <div class="panel detail">
+    <h2 id="detail-title">—</h2>
+    <div id="detail-img-slot"></div>
+    <dl>
+      <dt>生成モデル</dt><dd id="detail-model">—</dd>
+      <dt>生成日時</dt><dd id="detail-date">—</dd>
+      <dt>タグ</dt><dd id="detail-tags">—</dd>
+      <dt>関連</dt><dd id="detail-project">—</dd>
+      <dt>schema</dt><dd id="detail-schema">—</dd>
+    </dl>
+    <div class="prompt-text" id="detail-prompt">（プロンプトなし）</div>
+    <div class="row">
+      <button onclick="closeDetailModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  画鋲（gabyo / pin-wall） v0.1 — osakenpiro / TRBP — Hi-Me TooL<br>
+  腐葉土設計: ピンは削除されません。古いピンも opacity を通じて記録に残ります。<br>
+  schema_version: 1.0 / data: localStorage のみ（外部送信なし）
+</footer>
+
+<script>
+/* =====================================================
+   画鋲（pin-wall） v0.1
+   AI進化織り込み 6原則 遵守:
+   1) data/render 分離  2) 生成元API非依存  3) schema_version
+   4) prompt保存  5) メタ追記型  6) 3経路画像追加
+===================================================== */
+
+const SCHEMA_VERSION = "1.0";
+const STORAGE_KEY = "pin_wall_v1";
+
+const PIN_COLORS = ["c-yellow","c-pink","c-blue","c-green","c-purple"];
+
+let state = loadState();
+let activeFilter = null; // タグフィルタ
+let currentLayout = state.settings.layout_mode || "grid";
+
+function defaultState(){
+  return {
+    schema_version: SCHEMA_VERSION,
+    pins:[],
+    settings:{
+      layout_mode:"grid",
+      filter_tags:[],
+      show_meta:false
+    },
+    history: [{ ts:new Date().toISOString(), event:"init" }]
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    // schema migration hook
+    if(!s.schema_version){ s.schema_version = SCHEMA_VERSION; }
+    if(!s.history) s.history = [];
+    return s;
+  }catch(e){
+    console.warn("load failed, reset:", e);
+    return defaultState();
+  }
+}
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    alert("保存失敗: localStorage 上限の可能性あり (画像base64で容量肥大化)");
+    console.error(e);
+  }
+}
+
+/* ===== 無秩序感ヘルパー ===== */
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function makePinAttrs(){
+  return {
+    rotation_deg: rand(-4.5, 4.5),
+    color_class: pick(PIN_COLORS),
+    width_pct: rand(85, 115)
+  };
+}
+
+/* ===== add pin ===== */
+function openAddModal(){
+  document.getElementById("add-modal").classList.add("open");
+}
+function closeAddModal(){
+  document.getElementById("add-modal").classList.remove("open");
+  ["in-image-url","in-title","in-prompt","in-tags","in-project"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+  document.getElementById("in-image-file").value="";
+  document.getElementById("upload-preview").style.display="none";
+  document.getElementById("upload-preview").src="";
+  document.getElementById("in-model").value="gpt-image-2";
+  // reset tabs
+  document.querySelectorAll('.source-tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.source-tabs button[data-src="url"]').classList.add('active');
+  switchSource("url");
+}
+function switchSource(src){
+  document.getElementById("src-url-block").style.display = (src==="url")?"":"none";
+  document.getElementById("src-upload-block").style.display = (src==="upload")?"":"none";
+}
+
+let _uploadDataUrl = null;
+function bindUpload(){
+  document.getElementById("in-image-file").addEventListener("change", (e)=>{
+    const f = e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      _uploadDataUrl = ev.target.result;
+      const p = document.getElementById("upload-preview");
+      p.src = _uploadDataUrl; p.style.display="";
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function addPin(){
+  const activeTab = document.querySelector('.source-tabs button.active').dataset.src;
+  let img = "";
+  if(activeTab === "url"){
+    img = document.getElementById("in-image-url").value.trim();
+  }else if(activeTab === "upload"){
+    img = _uploadDataUrl || "";
+  } // else "none"
+
+  const title = document.getElementById("in-title").value.trim() || "(無題)";
+  const prompt = document.getElementById("in-prompt").value;
+  const tags = document.getElementById("in-tags").value.split(",").map(s=>s.trim()).filter(Boolean);
+  const model = document.getElementById("in-model").value.trim() || "unknown";
+  const project = document.getElementById("in-project").value.trim() || null;
+
+  if(!img && activeTab !== "none"){
+    alert("画像URL or ファイルを指定するか、「画像なし（メモのみ）」を選んでください。");
+    return;
+  }
+
+  const now = new Date();
+  const id = "pin_" + now.toISOString().replace(/[-:.TZ]/g,"").slice(0,14) + "_" +
+             Math.random().toString(36).slice(2,6);
+
+  const attrs = makePinAttrs();
+  const pin = {
+    id, image_url: img, title, prompt_text: prompt,
+    model, generated_at: now.toISOString(),
+    tags, linked_project: project,
+    decay_protected: true,
+    rotation_deg: attrs.rotation_deg,
+    color_class: attrs.color_class,
+    width_pct: attrs.width_pct,
+    z_index: state.pins.length + 1,
+    schema_version: SCHEMA_VERSION,
+    history: [{ ts: now.toISOString(), event:"created", model }]
+  };
+
+  state.pins.unshift(pin);
+  _uploadDataUrl = null;
+  saveState();
+  renderWall();
+  closeAddModal();
+}
+
+/* ===== detail ===== */
+function openDetail(id){
+  const p = state.pins.find(x=>x.id===id); if(!p) return;
+  document.getElementById("detail-title").textContent = p.title || "(無題)";
+  const slot = document.getElementById("detail-img-slot");
+  slot.innerHTML = p.image_url
+    ? '<img class="preview-img" src="'+p.image_url+'" alt="">'
+    : '<div style="background:rgba(0,0,0,.04);padding:40px;text-align:center;color:#888">（画像なし）</div>';
+  document.getElementById("detail-model").textContent = p.model || "unknown";
+  document.getElementById("detail-date").textContent = p.generated_at || "—";
+  document.getElementById("detail-tags").textContent = (p.tags||[]).join(", ") || "—";
+  document.getElementById("detail-project").textContent = p.linked_project || "—";
+  document.getElementById("detail-schema").textContent = p.schema_version || "—";
+  document.getElementById("detail-prompt").textContent = p.prompt_text || "（プロンプトなし）";
+  document.getElementById("detail-modal").classList.add("open");
+}
+function closeDetailModal(){
+  document.getElementById("detail-modal").classList.remove("open");
+}
+
+/* ===== filter ===== */
+function allTags(){
+  const set = new Set();
+  state.pins.forEach(p=> (p.tags||[]).forEach(t=>set.add(t)) );
+  return Array.from(set).sort();
+}
+function renderTagBar(){
+  const bar = document.getElementById("tag-bar");
+  bar.innerHTML = '<span style="font-size:12px;color:var(--sub)">タグ:</span>';
+  const allBtn = document.createElement("span");
+  allBtn.className = "tag-pill" + (activeFilter===null?" active":"");
+  allBtn.textContent = "すべて";
+  allBtn.onclick = ()=>{ activeFilter = null; renderTagBar(); renderWall(); };
+  bar.appendChild(allBtn);
+  allTags().forEach(t=>{
+    const el = document.createElement("span");
+    el.className = "tag-pill" + (activeFilter===t?" active":"");
+    el.textContent = "#"+t;
+    el.onclick = ()=>{ activeFilter = (activeFilter===t)?null:t; renderTagBar(); renderWall(); };
+    bar.appendChild(el);
+  });
+}
+
+/* ===== render ===== */
+function renderWall(){
+  const wall = document.getElementById("wall");
+  wall.className = "wall " + currentLayout;
+  wall.innerHTML = "";
+  const pins = activeFilter
+    ? state.pins.filter(p => (p.tags||[]).includes(activeFilter))
+    : state.pins;
+  document.getElementById("meta-info").textContent = pins.length + "件" + (activeFilter?` (#${activeFilter})`:"");
+  document.getElementById("empty").style.display = (state.pins.length===0)?"":"none";
+
+  pins.forEach((p, i)=>{
+    const el = document.createElement("div");
+    el.className = "pin " + (p.color_class || "c-yellow") + (p.image_url?"":" no-image");
+
+    // 腐葉土: 古いピンほどopacity下げる（ただし一定下限あり）
+    const idx = state.pins.indexOf(p);
+    const total = state.pins.length;
+    const decayOpacity = total > 1 ? (1 - (idx/total)*0.45) : 1; // 1.0 → 0.55
+    const opacity = Math.max(decayOpacity, 0.55);
+
+    const rot = p.rotation_deg || 0;
+    const w = p.width_pct || 100;
+    el.style.transform = `rotate(${rot.toFixed(2)}deg)`;
+    el.style.opacity = opacity.toFixed(2);
+
+    if(currentLayout === "scatter"){
+      // 散布配置: コンテナ幅内ランダム配置
+      el.style.position="absolute";
+      el.style.left = rand(2, 78) + "%";
+      el.style.top = (i * 110) + "px";
+      el.style.width = (180 + rand(-20, 40)) + "px";
+    }else{
+      // grid: width微揺れ
+      el.style.width = w + "%";
+      el.style.justifySelf = pick(["start","center","end"]);
+    }
+
+    let inner = '<div class="pinhead"></div>';
+    if(p.image_url){
+      inner += `<img src="${escapeAttr(p.image_url)}" alt="">`;
+    }else{
+      inner += '<div class="imgslot">📝 メモ</div>';
+    }
+    inner += `<div class="pin-title">${escapeHtml(p.title || "(無題)")}</div>`;
+    if(p.tags && p.tags.length){
+      inner += '<div class="pin-tags">' +
+        p.tags.slice(0,4).map(t=>`<span>#${escapeHtml(t)}</span>`).join("") +
+        '</div>';
+    }
+    el.innerHTML = inner;
+    el.onclick = ()=>openDetail(p.id);
+    wall.appendChild(el);
+  });
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* ===== layout toggle ===== */
+function toggleLayout(){
+  currentLayout = (currentLayout === "grid") ? "scatter" : "grid";
+  state.settings.layout_mode = currentLayout;
+  saveState();
+  renderWall();
+}
+
+/* ===== export / import ===== */
+function exportData(){
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const ts = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `pin-wall-export-${ts}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(){
+  document.getElementById("import-file").click();
+}
+function bindImport(){
+  document.getElementById("import-file").addEventListener("change",(e)=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = (ev)=>{
+      try{
+        const incoming = JSON.parse(ev.target.result);
+        if(!incoming.pins || !Array.isArray(incoming.pins)){ alert("形式不正"); return; }
+        if(confirm(`既存${state.pins.length}件と統合します。重複idはskip。続行？`)){
+          const ids = new Set(state.pins.map(p=>p.id));
+          incoming.pins.forEach(p=>{ if(!ids.has(p.id)) state.pins.push(p); });
+          saveState(); renderTagBar(); renderWall();
+        }
+      }catch(err){ alert("読み込み失敗: "+err.message); }
+    };
+    r.readAsText(f);
+  });
+}
+
+/* ===== bind ===== */
+document.getElementById("btn-add").onclick = openAddModal;
+document.getElementById("btn-layout").onclick = toggleLayout;
+document.getElementById("btn-export").onclick = exportData;
+document.getElementById("btn-import").onclick = importData;
+document.querySelectorAll('.source-tabs button').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('.source-tabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    switchSource(b.dataset.src);
+  };
+});
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener("click",(e)=>{ if(e.target===m) m.classList.remove("open"); });
+});
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape"){
+    document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove("open"));
+  }
+});
+bindUpload(); bindImport();
+renderTagBar(); renderWall();
+</script>
+</body>
+</html>

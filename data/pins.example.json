@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "pins": [
+    {
+      "id": "pin_20260425193045_a3f1",
+      "image_url": "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=600",
+      "title": "砂の三面図テスト #1",
+      "prompt_text": "サハラ砂漠の砂粒、正面・側面・断面・微細拡大の四方向図。背景はクリーム#faf9f6、光は左上45度。学術図鑑風、注釈線あり。",
+      "model": "gpt-image-2",
+      "generated_at": "2026-04-25T19:30:00+09:00",
+      "tags": ["素材図鑑", "第1章砂", "三面図"],
+      "linked_project": "kdp-jinrui-no-sozai-zukan",
+      "decay_protected": true,
+      "rotation_deg": 2.5,
+      "color_class": "c-yellow",
+      "width_pct": 102.3,
+      "z_index": 1,
+      "schema_version": "1.0",
+      "history": [
+        { "ts": "2026-04-25T19:30:00+09:00", "event": "created", "model": "gpt-image-2" }
+      ]
+    },
+    {
+      "id": "pin_20260425200012_b2e8",
+      "image_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600",
+      "title": "鉄鉱石の原石→鋼材→錆 三面",
+      "prompt_text": "鉄の3形態を並列に。左: 採掘直後の赤茶色の鉄鉱石。中央: 圧延された銀色の鋼材。右: 錆びた表面の拡大。同じ光源、同じ背景。",
+      "model": "gpt-image-2",
+      "generated_at": "2026-04-25T20:00:12+09:00",
+      "tags": ["素材図鑑", "第2章鉄", "三面図"],
+      "linked_project": "kdp-jinrui-no-sozai-zukan",
+      "decay_protected": true,
+      "rotation_deg": -3.1,
+      "color_class": "c-blue",
+      "width_pct": 95.7,
+      "z_index": 2,
+      "schema_version": "1.0",
+      "history": [
+        { "ts": "2026-04-25T20:00:12+09:00", "event": "created", "model": "gpt-image-2" }
+      ]
+    },
+    {
+      "id": "pin_20260425211530_c4f9",
+      "image_url": "",
+      "title": "PEACE PIECE 3話扉絵アイデア",
+      "prompt_text": "夕焼けの東京タワー、手前にミライ。シルエット強め。",
+      "model": "memo-only",
+      "generated_at": "2026-04-25T21:15:30+09:00",
+      "tags": ["PEACE PIECE", "メモ"],
+      "linked_project": "peace-piece",
+      "decay_protected": true,
+      "rotation_deg": 1.8,
+      "color_class": "c-pink",
+      "width_pct": 90.0,
+      "z_index": 3,
+      "schema_version": "1.0",
+      "history": [
+        { "ts": "2026-04-25T21:15:30+09:00", "event": "created", "model": "memo-only" }
+      ]
+    }
+  ],
+  "settings": {
+    "layout_mode": "grid",
+    "filter_tags": [],
+    "show_meta": false
+  },
+  "history": [
+    { "ts": "2026-04-25T00:00:00+09:00", "event": "init" }
+  ]
+}
