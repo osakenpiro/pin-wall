@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>画鋲（gabyo / pin-wall v0.2）— osakenpiro</title>
+<title>画鋲（gabyo / pin-wall v0.3）— osakenpiro</title>
 <style>
 :root{
   --cream:#faf9f6;
@@ -175,7 +175,7 @@ footer a{color:var(--sub)}
 <body>
 
 <header>
-  <h1>画鋲<span class="en">gabyo / pin-wall</span><span class="ver">v0.2</span></h1>
+  <h1>画鋲<span class="en">gabyo / pin-wall</span><span class="ver">v0.3</span></h1>
   <div class="tagline">
     思想とは関係なく、<em>いま作った画像</em>を貼る場。<br>
     <em>グルーピング</em> + <em>固定ソート</em> + <em>Notion mirror</em>
@@ -226,7 +226,7 @@ footer a{color:var(--sub)}
       <input type="url" id="in-image-url" placeholder="https://example.com/image.png">
     </div>
     <div id="src-upload-block" style="display:none">
-      <label>画像ファイル</label>
+      <label>画像ファイル <span style="color:var(--coral);font-weight:normal">(または このモーダル内で <kbd style="background:#eee;padding:1px 5px;border-radius:2px;font-family:monospace;font-size:11px">Ctrl+V</kbd> で貼り付け)</span></label>
       <input type="file" id="in-image-file" accept="image/*">
       <img id="upload-preview" class="preview" style="display:none">
     </div>
@@ -318,7 +318,7 @@ footer a{color:var(--sub)}
 </div>
 
 <footer>
-  画鋲（gabyo / pin-wall） v0.2 — osakenpiro / TRBP — Hi-Me TooL<br>
+  画鋲（gabyo / pin-wall） v0.3 — osakenpiro / TRBP — Hi-Me TooL<br>
   腐葉土設計: ピンは削除されません。schema_version: 1.1 / data: localStorage（PAT含む）<br>
   Notion mirror: Cloudflare Worker proxy 経由（CORS回避）
 </footer>
@@ -436,14 +436,56 @@ let _uploadDataUrl = null;
 function bindUpload(){
   document.getElementById("in-image-file").addEventListener("change", (e)=>{
     const f = e.target.files[0]; if(!f) return;
-    const reader = new FileReader();
-    reader.onload = (ev)=>{
-      _uploadDataUrl = ev.target.result;
-      const p = document.getElementById("upload-preview");
-      p.src = _uploadDataUrl; p.style.display="";
-    };
-    reader.readAsDataURL(f);
+    handleImageBlob(f);
   });
+}
+
+/* === v0.3: Ctrl+V paste対応 (clipboardから画像貼り付け) === */
+function bindPaste(){
+  document.addEventListener("paste", (e)=>{
+    const modal = document.getElementById("add-modal");
+    if(!modal || !modal.classList.contains("open")) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+    for(const item of items){
+      if(item.type && item.type.startsWith("image/")){
+        const blob = item.getAsFile();
+        if(blob){
+          handleImageBlob(blob);
+          // sourceタブを「アップロード」に自動切替
+          document.querySelectorAll('.source-tabs button').forEach(b=>b.classList.remove('active'));
+          const upBtn = document.querySelector('.source-tabs button[data-src="upload"]');
+          if(upBtn) upBtn.classList.add('active');
+          switchSource("upload");
+          // 一瞬フィードバック
+          flashPasteOk();
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  });
+}
+function handleImageBlob(blob){
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    _uploadDataUrl = ev.target.result;
+    const p = document.getElementById("upload-preview");
+    p.src = _uploadDataUrl; p.style.display="";
+  };
+  reader.readAsDataURL(blob);
+}
+function flashPasteOk(){
+  let ind = document.getElementById("paste-indicator");
+  if(!ind){
+    ind = document.createElement("div");
+    ind.id = "paste-indicator";
+    ind.style.cssText = "position:fixed;top:90px;left:50%;transform:translateX(-50%);background:var(--teal);color:#fff;padding:8px 16px;border-radius:4px;font-size:13px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .3s";
+    ind.textContent = "📋 画像を貼り付けました — タイトル/タグを入れて「貼る」";
+    document.body.appendChild(ind);
+  }
+  ind.style.opacity = "1";
+  setTimeout(()=>{ ind.style.opacity = "0"; }, 2200);
 }
 
 async function addPin(){
@@ -930,7 +972,7 @@ document.addEventListener("keydown",(e)=>{
     document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove("open"));
   }
 });
-bindUpload(); bindImport();
+bindUpload(); bindImport(); bindPaste();
 refreshMirrorStatus();
 renderTagBar(); renderWall();
 </script>
